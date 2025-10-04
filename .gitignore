@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# IDE & OS
+.idea/
+.vscode/
+.DS_Store
+
+# Logs
+*.log
+
+# Config & secrets
+.env
+config.json
+secrets.json
+
+# Build files
+dist/
+build/
+
+# Databases
+*.sqlite3
+*.db
+
+# Pyrogram sessions
+*.session
+*.session-journal
+user_session*
