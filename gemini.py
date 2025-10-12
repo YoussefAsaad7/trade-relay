@@ -31,11 +31,13 @@ SIGNAL_SCHEMA = types.Schema(
         ),
         "tp1": types.Schema(
             type=types.Type.NUMBER,
-            description="Take Profit 1 price, or None if not specified."
+            nullable=True,
+            description="Take Profit 1 price, or null if not specified."
         ),
         "tp2": types.Schema(
             type=types.Type.NUMBER,
-            description="Take Profit 2 price, or None if not specified."
+            nullable=True,
+            description="Take Profit 2 price, or null if not specified."
         ),
         "sl": types.Schema(
             type=types.Type.NUMBER,
@@ -53,7 +55,10 @@ class GeminiClient:
     Relies on the GEMINI_API_KEY environment variable being set.
     """
 
-    def __init__(self, model_name: str = GEMINI_MODEL, schema: types.Schema = SIGNAL_SCHEMA):
+    def __init__(self,
+                 model_name: str = GEMINI_MODEL,
+                 schema: types.Schema = SIGNAL_SCHEMA,
+                 broker_symbols: Optional[list[str]] = None):
         """Initializes the Gemini client and API configuration."""
         try:
             # The client automatically reads the GEMINI_API_KEY from environment variables
@@ -66,13 +71,15 @@ class GeminiClient:
             response_mime_type="application/json",
             response_schema=schema,
         )
+        # Add broker symbols for mapping
+        self._broker_symbols = broker_symbols or []
 
     async def parse_signal_message(self, message_text: str) -> Optional[Dict[str, Any]]:
         """
         Sends message text to Gemini API, attempts to parse the JSON response,
         and returns the result as a Python dictionary.
         """
-
+        broker_symbols_text = ", ".join(self._broker_symbols) if self._broker_symbols else "[]"
         prompt = (
             # f"Analyze the following financial message. Your task is to extract trading parameters and determine if it is a valid, actionable trading signal. "
             # f"Criteria for a valid signal: Must clearly state a 'symbol', 'current_price', 'entry_price', and 'sl' (stop-loss). 'tp1' and 'tp2' are optional. "
@@ -82,6 +89,13 @@ class GeminiClient:
             f"Criteria for a valid signal: Must clearly state a 'symbol', 'entry_price', and 'sl' (stop-loss). 'tp1' and 'tp2' are optional. "
             f"If it is a valid signal, set 'is_signal' to true and fill all required fields. If 'entry_price' is a range, choose the value that has the most distance from the stop-loss. "
             f"If any required field is clearly missing (e.g., no stop-loss), or if the message is an ad/general analysis, set 'is_signal' to false. "
+            f"IMPORTANT:\n"
+            f"- Always map the detected symbol name to one of the valid broker symbols: {broker_symbols_text}.\n"
+            f"- The mapping must be exact — do not invent new names.\n"
+            f"- The signal message might contain local names, nicknames, or Arabic text (e.g., 'الداونجونز' should map to 'US30').\n"
+            f"- If no valid mapping can be determined, set 'is_signal' to false.\n\n"
+            f"- If only one target price (TP) is mentioned, fill tp1 and leave tp2 as null.\n"
+            f"- Never invent tp1 or tp2 values. If missing, use null instead of random numbers.\n"
             f"Message: \"{message_text}\""
         )
 
@@ -97,8 +111,18 @@ class GeminiClient:
                 ).text
             )
 
-            # Convert the successful JSON string into a Python dictionary
-            return json.loads(response_text)
+            # Convert JSON to dict
+            data = json.loads(response_text)
+
+            # --- ✅ Post-validation: require at least 1 TP ---
+            tp1 = data.get("tp1")
+            tp2 = data.get("tp2")
+
+            # If both missing or null, force is_signal=False
+            if (tp1 is None) and (tp2 is None):
+                data["is_signal"] = False
+
+            return data
 
 
         except json.JSONDecodeError as e:
