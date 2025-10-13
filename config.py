@@ -43,7 +43,7 @@ class BotConfig:
         "GBPJPY": {"pip": 0.01, "name": "الباوند ين"},
         "GBPUSD": {"pip": 0.0001, "name": "الباوند دولار"},
         "EURUSD": {"pip": 0.0001, "name": "اليورو دولار"},
-        "USOIL": {"pip": 1.0, "name": "النفط"},
+        "USOIL": {"pip": 0.01, "name": "النفط"},
         "DE30": {"pip": 1.0, "name": "الداكس"},
         "BTCUSD": {"pip": 1.0, "name": "البتكوين"},
         # add more symbols as needed
