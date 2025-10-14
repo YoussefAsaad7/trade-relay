@@ -102,7 +102,7 @@ class SignalFormatter:
 
         # 4. Build the formatted Arabic message
         formatted_message = f"{arabic_name}♂️\n👁‍🗨{symbol}\n"
-        formatted_message += f"امر {direction_ar} معلق\n"
+        formatted_message += f"أمر {direction_ar} معلق\n"
         formatted_message += f"السعر {entry_price or 'N/A'}\n"
 
         # Include current price only if different from entry price
@@ -113,7 +113,7 @@ class SignalFormatter:
 
         if tp1:
             if tp2:
-                formatted_message += f"الهدف الاول {tp1}\n"
+                formatted_message += f"الهدف الأول {tp1}\n"
             else:
                 formatted_message += f"الهدف {tp1}\n"
 
@@ -160,10 +160,10 @@ class SignalFormatter:
         elif status == "SL":
             return f"🔴 ستوب {sign}{pips}"
         elif status == "TP1":
-            return f"✅ تم ضرب الهدف الاول {sign}{pips}"
+            return f"✅ تم ضرب الهدف الأول {sign}{pips}"
         elif status == "TP2":
             return f"✅ تم ضرب الهدف الثاني {sign}{pips}"
         elif status == "BREAKEVEN":
-            return f"🟡 خروج على الدخول "
+            return f"🟡 تم الخروج على الدخول بعد ضرب الهدف الأول "
 
         return f"Trade update for {symbol}: {status}"
